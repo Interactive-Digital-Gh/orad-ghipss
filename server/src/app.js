@@ -37,7 +37,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      'frame-src': ["'self'", 'https://docs.google.com'],
+      'frame-src': ["'self'", 'https://docs.google.com', 'https://view.officeapps.live.com'],
     },
   },
 }));

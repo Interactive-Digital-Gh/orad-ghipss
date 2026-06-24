@@ -69,7 +69,7 @@ export default function GuestPage() {
   const getViewerUrl = () => {
     if (!data) return '';
     if (canNativePreview) return data.viewUrl;
-    if (canGDocsPreview) return `https://docs.google.com/viewer?url=${encodeURIComponent(data.viewUrl)}&embedded=true`;
+    if (canGDocsPreview) return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.viewUrl)}`;
     return '';
   };
 
