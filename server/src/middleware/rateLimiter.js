@@ -7,8 +7,6 @@ export const loginRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  store: new RedisStore({
-    sendCommand: (...args) => redis.sendCommand(args),
-  }),
+  ...(redis ? { store: new RedisStore({ sendCommand: (...args) => redis.sendCommand(args) }) } : {}),
   message: { error: 'Too many login attempts, please try again later' },
 });
