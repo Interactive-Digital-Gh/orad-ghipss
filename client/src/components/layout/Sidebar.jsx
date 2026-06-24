@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Folder, ClipboardList, Users, LogOut, Inbox, History, ClipboardCheck, UserPlus, ChevronDown, User, X, Bell } from 'lucide-react';
+import { LayoutDashboard, Folder, ClipboardList, Users, LogOut, Inbox, History, ClipboardCheck, UserPlus, ChevronDown, User, X, Bell, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
+import { useSidebar } from '../../context/SidebarContext.jsx';
 import api from '../../api/axios.js';
 
 export default function Sidebar({ isMobile = false, isOpen = false, onClose = () => {} }) {
+  const { collapsed, setCollapsed } = useSidebar();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,20 +18,22 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
   const navItem = (to, label, Icon) => (
-    <NavLink key={to} to={to} onClick={() => isMobile && onClose()} style={({ isActive }) => ({
+    <NavLink key={to} to={to} onClick={() => isMobile && onClose()} title={collapsed && !isMobile ? label : undefined} style={({ isActive }) => ({
       display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '7px 16px', margin: '1px 8px',
+      padding: collapsed && !isMobile ? '9px 0' : '7px 16px',
+      margin: '1px 8px',
+      justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
       textDecoration: 'none', borderRadius: '6px', fontSize: '13px',
       fontWeight: isActive ? '600' : '400',
       color: isActive ? '#306196' : '#374151',
       backgroundColor: isActive ? '#E8F0F8' : 'transparent',
-      borderLeft: isActive ? '2px solid #306196' : '2px solid transparent',
+      borderLeft: collapsed && !isMobile ? 'none' : isActive ? '2px solid #306196' : '2px solid transparent',
       transition: 'background 0.1s, color 0.1s',
     })}>
       {({ isActive }) => (
         <>
-          <Icon size={14} color={isActive ? '#306196' : '#6B7280'} />
-          {label}
+          <Icon size={16} color={isActive ? '#306196' : '#6B7280'} />
+          {(!collapsed || isMobile) && label}
         </>
       )}
     </NavLink>
@@ -51,11 +55,14 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
     if (isMobile) onClose();
   };
 
+  const sidebarWidth = isMobile ? '220px' : collapsed ? '56px' : '220px';
+
   return (
     <div style={{
-      width: '220px', flexShrink: 0,
+      width: sidebarWidth, flexShrink: 0,
       backgroundColor: '#FFFFFF', borderRight: '1px solid #E5E7EB',
       display: 'flex', flexDirection: 'column',
+      transition: 'width 0.2s ease',
       ...(isMobile ? {
         position: 'fixed', top: 0, left: isOpen ? 0 : '-260px',
         height: '100vh', zIndex: 1000,
@@ -64,13 +71,25 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
         boxShadow: isOpen ? '4px 0 24px rgba(0,0,0,0.18)' : 'none',
       } : {
         position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+        overflow: 'hidden',
       }),
     }}>
       {/* Brand */}
-      <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #1B3A5C' }}>
-        <img src="/orad-logo.svg" alt="ORAD"
-          style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
-        />
+      <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1B3A5C', minHeight: '65px' }}>
+        {(!collapsed || isMobile) && (
+          <img src="/orad-logo.svg" alt="ORAD" style={{ height: '30px', width: 'auto', objectFit: 'contain' }} />
+        )}
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed(v => !v)}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.1s', marginLeft: collapsed ? 'auto' : '0' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.22)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+          >
+            {collapsed ? <ChevronsRight size={14} color="#fff" /> : <ChevronsLeft size={14} color="#fff" />}
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -78,34 +97,42 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
 
         {/* WORKSPACE */}
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ padding: '0 16px 5px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>WORKSPACE</div>
+          {(!collapsed || isMobile) && <div style={{ padding: '0 16px 5px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>WORKSPACE</div>}
+          {collapsed && !isMobile && <div style={{ height: '5px' }} />}
           {navItem('/dashboard', 'Dashboard', LayoutDashboard)}
           {navItem('/directory', 'Directory', Folder)}
         </div>
 
         {/* TRACKING */}
         <div style={{ marginBottom: '16px' }}>
-          <div style={{ padding: '0 16px 5px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>TRACKING</div>
+          {(!collapsed || isMobile) && <div style={{ padding: '0 16px 5px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>TRACKING</div>}
+          {collapsed && !isMobile && <div style={{ height: '5px' }} />}
           {navItem('/my-activity', 'My Activity', History)}
           {navItem('/my-requests', 'My Requests', ClipboardCheck)}
-          <NavLink to="/notifications" style={({ isActive }) => ({
+          <NavLink to="/notifications" title={collapsed && !isMobile ? 'Notifications' : undefined} style={({ isActive }) => ({
             display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '7px 16px', margin: '1px 8px',
+            padding: collapsed && !isMobile ? '9px 0' : '7px 16px',
+            margin: '1px 8px',
+            justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
             textDecoration: 'none', borderRadius: '6px', fontSize: '13px',
             fontWeight: isActive ? '600' : '400',
             color: isActive ? '#306196' : '#374151',
             backgroundColor: isActive ? '#E8F0F8' : 'transparent',
-            borderLeft: isActive ? '2px solid #306196' : '2px solid transparent',
+            borderLeft: collapsed && !isMobile ? 'none' : isActive ? '2px solid #306196' : '2px solid transparent',
             transition: 'background 0.1s, color 0.1s',
+            position: 'relative',
           })}>
             {({ isActive }) => (
               <>
-                <Bell size={14} color={isActive ? '#306196' : '#6B7280'} />
-                <span style={{ flex: 1 }}>Notifications</span>
-                {unreadCount > 0 && (
+                <Bell size={16} color={isActive ? '#306196' : '#6B7280'} />
+                {(!collapsed || isMobile) && <span style={{ flex: 1 }}>Notifications</span>}
+                {unreadCount > 0 && (!collapsed || isMobile) && (
                   <span style={{ fontSize: '10px', fontWeight: '700', color: '#FFFFFF', backgroundColor: '#306196', borderRadius: '10px', padding: '1px 6px', minWidth: '16px', textAlign: 'center' }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
+                )}
+                {unreadCount > 0 && collapsed && !isMobile && (
+                  <span style={{ position: 'absolute', top: '6px', right: '6px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#306196', border: '1.5px solid #fff' }} />
                 )}
               </>
             )}
@@ -115,66 +142,72 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
         {/* ADMINISTRATION — admin only */}
         {user?.role === 'admin' && (
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ padding: '0 16px 5px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ADMINISTRATION</div>
+            {(!collapsed || isMobile) && <div style={{ padding: '0 16px 5px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ADMINISTRATION</div>}
+            {collapsed && !isMobile && <div style={{ height: '5px' }} />}
 
-            {/* User Management — collapsible */}
-            <button
-              onClick={() => setUsersOpen(v => !v)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                width: 'calc(100% - 16px)', margin: '1px 8px',
-                padding: '7px 16px',
-                background: 'none', border: 'none', cursor: 'pointer',
-                borderRadius: '6px', fontSize: '13px',
-                fontWeight: userMgmtActive ? '600' : '400',
-                color: userMgmtActive ? '#306196' : '#374151',
-                backgroundColor: userMgmtActive && !usersOpen ? '#E8F0F8' : 'transparent',
-                borderLeft: userMgmtActive && !usersOpen ? '2px solid #306196' : '2px solid transparent',
-                transition: 'background 0.1s, color 0.1s',
-                textAlign: 'left',
-              }}
-            >
-              <Users size={14} color={userMgmtActive ? '#306196' : '#6B7280'} />
-              <span style={{ flex: 1 }}>User Management</span>
-              <ChevronDown size={12} color="#9CA3AF" style={{ transform: usersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </button>
+            {/* User Management — collapsible (icon-only when collapsed) */}
+            {collapsed && !isMobile ? (
+              navItem('/users', 'Users', Users)
+            ) : (
+              <>
+                <button
+                  onClick={() => setUsersOpen(v => !v)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    width: 'calc(100% - 16px)', margin: '1px 8px',
+                    padding: '7px 16px',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    borderRadius: '6px', fontSize: '13px',
+                    fontWeight: userMgmtActive ? '600' : '400',
+                    color: userMgmtActive ? '#306196' : '#374151',
+                    backgroundColor: userMgmtActive && !usersOpen ? '#E8F0F8' : 'transparent',
+                    borderLeft: userMgmtActive && !usersOpen ? '2px solid #306196' : '2px solid transparent',
+                    transition: 'background 0.1s, color 0.1s',
+                    textAlign: 'left',
+                  }}
+                >
+                  <Users size={14} color={userMgmtActive ? '#306196' : '#6B7280'} />
+                  <span style={{ flex: 1 }}>User Management</span>
+                  <ChevronDown size={12} color="#9CA3AF" style={{ transform: usersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
 
-            {/* Sub-items */}
-            {usersOpen && (
-              <div style={{ marginLeft: '16px', borderLeft: '1px solid #E5E7EB', paddingLeft: '4px' }}>
-                <NavLink to="/users" end style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '6px 12px', margin: '1px 4px',
-                  textDecoration: 'none', borderRadius: '5px', fontSize: '12px',
-                  fontWeight: isActive ? '600' : '400',
-                  color: isActive ? '#306196' : '#374151',
-                  backgroundColor: isActive ? '#E8F0F8' : 'transparent',
-                  transition: 'background 0.1s',
-                })}>
-                  {({ isActive }) => (
-                    <>
-                      <Users size={12} color={isActive ? '#306196' : '#9CA3AF'} />
-                      All Users
-                    </>
-                  )}
-                </NavLink>
-                <NavLink to="/users/import" style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '6px 12px', margin: '1px 4px',
-                  textDecoration: 'none', borderRadius: '5px', fontSize: '12px',
-                  fontWeight: isActive ? '600' : '400',
-                  color: isActive ? '#306196' : '#374151',
-                  backgroundColor: isActive ? '#E8F0F8' : 'transparent',
-                  transition: 'background 0.1s',
-                })}>
-                  {({ isActive }) => (
-                    <>
-                      <UserPlus size={12} color={isActive ? '#306196' : '#9CA3AF'} />
-                      Bulk Import
-                    </>
-                  )}
-                </NavLink>
-              </div>
+                {usersOpen && (
+                  <div style={{ marginLeft: '16px', borderLeft: '1px solid #E5E7EB', paddingLeft: '4px' }}>
+                    <NavLink to="/users" end style={({ isActive }) => ({
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '6px 12px', margin: '1px 4px',
+                      textDecoration: 'none', borderRadius: '5px', fontSize: '12px',
+                      fontWeight: isActive ? '600' : '400',
+                      color: isActive ? '#306196' : '#374151',
+                      backgroundColor: isActive ? '#E8F0F8' : 'transparent',
+                      transition: 'background 0.1s',
+                    })}>
+                      {({ isActive }) => (
+                        <>
+                          <Users size={12} color={isActive ? '#306196' : '#9CA3AF'} />
+                          All Users
+                        </>
+                      )}
+                    </NavLink>
+                    <NavLink to="/users/import" style={({ isActive }) => ({
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '6px 12px', margin: '1px 4px',
+                      textDecoration: 'none', borderRadius: '5px', fontSize: '12px',
+                      fontWeight: isActive ? '600' : '400',
+                      color: isActive ? '#306196' : '#374151',
+                      backgroundColor: isActive ? '#E8F0F8' : 'transparent',
+                      transition: 'background 0.1s',
+                    })}>
+                      {({ isActive }) => (
+                        <>
+                          <UserPlus size={12} color={isActive ? '#306196' : '#9CA3AF'} />
+                          Bulk Import
+                        </>
+                      )}
+                    </NavLink>
+                  </div>
+                )}
+              </>
             )}
 
             {navItem('/requests', 'Access Requests', Inbox)}
@@ -188,24 +221,26 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
         {/* Account Settings */}
         <button
           onClick={() => navigate('/profile')}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '400', color: '#374151', width: '100%', textAlign: 'left', transition: 'background 0.1s' }}
+          title={collapsed && !isMobile ? 'Account Settings' : undefined}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: collapsed && !isMobile ? '9px 0' : '9px 24px', justifyContent: collapsed && !isMobile ? 'center' : 'flex-start', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '400', color: '#374151', width: '100%', textAlign: 'left', transition: 'background 0.1s' }}
           onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F7F8FA'}
           onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
         >
           <User size={14} color="#6B7280" />
-          Account Settings
+          {(!collapsed || isMobile) && 'Account Settings'}
         </button>
 
         {/* Sign out */}
-        <div style={{ padding: '6px 16px 16px' }}>
+        <div style={{ padding: collapsed && !isMobile ? '6px 8px 16px' : '6px 16px 16px' }}>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '7px', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '7px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '500', transition: 'color 0.1s, background 0.1s', width: '100%' }}
+            title={collapsed && !isMobile ? 'Sign out' : undefined}
+            style={{ display: 'flex', alignItems: 'center', gap: '7px', justifyContent: collapsed && !isMobile ? 'center' : 'flex-start', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '7px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '500', transition: 'color 0.1s, background 0.1s', width: '100%' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#DC2626'; e.currentTarget.style.backgroundColor = '#FEF2F2'; }}
             onMouseLeave={e => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.backgroundColor = 'transparent'; }}
           >
             <LogOut size={14} />
-            Sign out
+            {(!collapsed || isMobile) && 'Sign out'}
           </button>
         </div>
       </div>

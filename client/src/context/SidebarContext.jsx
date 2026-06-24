@@ -4,8 +4,9 @@ const SidebarContext = createContext(null);
 
 export function SidebarProvider({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   return (
-    <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
+    <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen, collapsed, setCollapsed }}>
       {children}
     </SidebarContext.Provider>
   );
