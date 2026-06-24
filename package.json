@@ -2,6 +2,6 @@
   "name": "orad-ghipss",
   "version": "1.0.0",
   "scripts": {
-    "build": "npm install --prefix client && npm run build --prefix client && npm install --prefix server && npx --prefix server prisma migrate deploy && npx --prefix server prisma generate && npx --prefix server prisma db seed"
+    "build": "npm install --prefix client --include=dev && npm run build --prefix client && npm install --prefix server && npx --prefix server prisma migrate deploy && npx --prefix server prisma generate && npx --prefix server prisma db seed"
   }
 }
