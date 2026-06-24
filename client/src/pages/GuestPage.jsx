@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Download, FileText, AlertCircle, ShieldCheck, Clock, CheckCircle2 } from 'lucide-react';
+import { Download, FileText, AlertCircle, ShieldCheck, Clock, CheckCircle2, EyeOff, Maximize2 } from 'lucide-react';
 import api from '../api/axios.js';
 
 function formatSize(bytes) {
@@ -23,8 +23,14 @@ const EXT_COLOR = {
   PPTX: { color: '#D97706', bg: '#FEF3C7', grad: 'linear-gradient(135deg,#FEF3C7,#FCD34D)' },
   PNG:  { color: '#7C3AED', bg: '#EDE9FE', grad: 'linear-gradient(135deg,#EDE9FE,#C4B5FD)' },
   JPG:  { color: '#7C3AED', bg: '#EDE9FE', grad: 'linear-gradient(135deg,#EDE9FE,#C4B5FD)' },
+  JPEG: { color: '#7C3AED', bg: '#EDE9FE', grad: 'linear-gradient(135deg,#EDE9FE,#C4B5FD)' },
   ZIP:  { color: '#6B7280', bg: '#F3F4F6', grad: 'linear-gradient(135deg,#F3F4F6,#D1D5DB)' },
 };
+
+// Which file types can be previewed natively in an iframe
+const NATIVE_PREVIEW = ['PDF', 'PNG', 'JPG', 'JPEG', 'GIF', 'WEBP', 'SVG'];
+// Which types work via Google Docs viewer
+const GDOCS_PREVIEW = ['DOCX', 'DOC', 'XLSX', 'XLS', 'PPTX', 'PPT'];
 
 export default function GuestPage() {
   const { token } = useParams();
@@ -33,6 +39,7 @@ export default function GuestPage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [done, setDone] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
     api.get(`/guest/${token}`)
@@ -55,84 +62,87 @@ export default function GuestPage() {
   const ext = getExt(data?.name);
   const extStyle = EXT_COLOR[ext] || { color: '#6B7280', bg: '#F3F4F6', grad: 'linear-gradient(135deg,#F3F4F6,#D1D5DB)' };
 
+  const canNativePreview = NATIVE_PREVIEW.includes(ext);
+  const canGDocsPreview = GDOCS_PREVIEW.includes(ext);
+  const canPreview = canNativePreview || canGDocsPreview;
+
+  const getViewerUrl = () => {
+    if (!data) return '';
+    if (canNativePreview) return data.viewUrl;
+    if (canGDocsPreview) return `https://docs.google.com/gviz/viewer?url=${encodeURIComponent(data.viewUrl)}`;
+    return '';
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(160deg, #060F1E 0%, #0D2240 50%, #0A1A30 100%)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: data?.viewOnly && canPreview ? 'flex-start' : 'center',
       padding: '24px', position: 'relative', overflow: 'hidden', fontFamily: 'inherit',
     }}>
 
       {/* Background decoration */}
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(48,97,150,0.12) 1px, transparent 1px)', backgroundSize: '30px 30px', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: '-200px', left: '-200px', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(48,97,150,0.2) 0%, transparent 60%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-150px', right: '-150px', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(26,58,92,0.4) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
       {/* Brand */}
-      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
-        <img src="/ghipss-icon.svg" alt="GhIPSS" style={{ width: '52px', height: '52px', filter: 'drop-shadow(0 4px 16px rgba(48,97,150,0.6))' }} />
+      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '28px', marginTop: data?.viewOnly && canPreview ? '16px' : '0' }}>
+        <img src="/ghipss-icon.svg" alt="GhIPSS" style={{ width: '44px', height: '44px', filter: 'drop-shadow(0 4px 16px rgba(48,97,150,0.6))' }} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', fontWeight: '900', color: '#FFFFFF', letterSpacing: '-0.5px', lineHeight: 1 }}>ORAD — GhIPSS</div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: '500', marginTop: '3px', letterSpacing: '0.04em' }}>Operations Portal · Secure Document Sharing</div>
+          <div style={{ fontSize: '16px', fontWeight: '900', color: '#FFFFFF', letterSpacing: '-0.5px', lineHeight: 1 }}>ORAD — GhIPSS</div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: '500', marginTop: '3px' }}>Operations Portal · Secure Document Sharing</div>
         </div>
       </div>
 
       {/* Main card */}
-      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '460px' }}>
+      <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: data?.viewOnly && canPreview ? '900px' : '460px' }}>
         <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '24px',
-          overflow: 'hidden',
-          boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 40px 80px rgba(0,0,0,0.6), 0 8px 32px rgba(48,97,150,0.15)',
+          backgroundColor: '#FFFFFF', borderRadius: '24px', overflow: 'hidden',
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.08), 0 40px 80px rgba(0,0,0,0.6)',
         }}>
           {/* Top gradient band */}
-          <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)', padding: '28px 32px 32px', position: 'relative', overflow: 'hidden' }}>
-            {/* decorative circles */}
+          <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)', padding: '22px 28px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', right: '-60px', top: '-60px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', left: '-30px', bottom: '-60px', width: '150px', height: '150px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
             {loading ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
+                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(255,255,255,0.1)' }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ height: '16px', width: '60%', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '8px' }} />
-                  <div style={{ height: '12px', width: '40%', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: '6px' }} />
+                  <div style={{ height: '15px', width: '55%', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '6px', marginBottom: '8px' }} />
+                  <div style={{ height: '11px', width: '35%', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: '6px' }} />
                 </div>
               </div>
             ) : error ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '52px', height: '52px', borderRadius: '14px', backgroundColor: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <AlertCircle size={24} color="#FCA5A5" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <AlertCircle size={22} color="#FCA5A5" />
                 </div>
                 <div>
-                  <div style={{ fontSize: '17px', fontWeight: '800', color: '#FFFFFF', marginBottom: '3px' }}>Link Unavailable</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#FFFFFF', marginBottom: '3px' }}>Link Unavailable</div>
                   <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>This document link could not be found</div>
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                {/* File type icon */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: extStyle.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
-                    <FileText size={26} color={extStyle.color} />
+                  <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: extStyle.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.2)' }}>
+                    <FileText size={24} color={extStyle.color} />
                   </div>
-                  <div style={{ position: 'absolute', bottom: '-5px', right: '-5px', backgroundColor: '#FFFFFF', border: `1.5px solid ${extStyle.bg}`, borderRadius: '5px', padding: '1px 5px', fontSize: '8px', fontWeight: '800', color: extStyle.color, letterSpacing: '0.05em' }}>
+                  <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', backgroundColor: '#FFFFFF', border: `1.5px solid ${extStyle.bg}`, borderRadius: '5px', padding: '1px 5px', fontSize: '8px', fontWeight: '800', color: extStyle.color }}>
                     {ext}
                   </div>
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '15px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {data.name}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '500' }}>{formatSize(data.sizeBytes)}</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#FFFFFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{formatSize(data.sizeBytes)}</span>
                     <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '500' }}>{ext} file</span>
-                    {data.label && (
-                      <>
-                        <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                        <span style={{ fontSize: '11px', color: 'rgba(111,168,214,0.9)', fontWeight: '600' }}>{data.label}</span>
-                      </>
+                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{ext} file</span>
+                    {data.viewOnly && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.7)', backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '5px', padding: '2px 7px' }}>
+                        <EyeOff size={9} /> View only
+                      </span>
                     )}
                   </div>
                 </div>
@@ -140,44 +150,116 @@ export default function GuestPage() {
             )}
           </div>
 
-          {/* Bottom section */}
-          <div style={{ padding: '28px 32px 32px' }}>
+          {/* Body */}
+          <div style={{ padding: '24px 28px 28px' }}>
             {loading ? (
               <div>
-                <div style={{ height: '48px', borderRadius: '12px', backgroundColor: '#F3F4F6', marginBottom: '20px' }} />
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-                  {[1,2,3].map(i => <div key={i} style={{ height: '12px', width: '70px', borderRadius: '6px', backgroundColor: '#F3F4F6' }} />)}
-                </div>
+                <div style={{ height: '44px', borderRadius: '10px', backgroundColor: '#F3F4F6', marginBottom: '16px' }} />
+                <div style={{ height: '44px', borderRadius: '10px', backgroundColor: '#F3F4F6' }} />
               </div>
             ) : error ? (
               <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '16px 20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '13px', color: '#DC2626', fontWeight: '500', margin: 0, lineHeight: 1.6 }}>{error}</p>
+                <p style={{ fontSize: '13px', color: '#DC2626', fontWeight: '500', margin: 0 }}>{error}</p>
+              </div>
+            ) : data.viewOnly ? (
+              /* ── VIEW ONLY MODE ── */
+              <div>
+                {canPreview ? (
+                  <>
+                    {/* Viewer notice */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', backgroundColor: '#EEF4FF', border: '1px solid #C7DEFF', borderRadius: '10px', marginBottom: '16px' }}>
+                      <EyeOff size={13} color="#306196" />
+                      <span style={{ fontSize: '12px', color: '#306196', fontWeight: '600' }}>This document is view only — downloading is not permitted</span>
+                      <button
+                        onClick={() => setFullscreen(v => !v)}
+                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', color: '#306196', backgroundColor: '#FFFFFF', border: '1px solid #C7DEFF', borderRadius: '6px', cursor: 'pointer' }}
+                      >
+                        <Maximize2 size={11} /> {fullscreen ? 'Compact' : 'Expand'}
+                      </button>
+                    </div>
+
+                    {/* Inline viewer */}
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', backgroundColor: '#F7F8FA', height: fullscreen ? '80vh' : '520px' }}>
+                      {canNativePreview ? (
+                        ext === 'PDF' ? (
+                          <iframe
+                            src={`${getViewerUrl()}#toolbar=0&navpanes=0`}
+                            style={{ width: '100%', height: '100%', border: 'none' }}
+                            title={data.name}
+                          />
+                        ) : (
+                          <img
+                            src={getViewerUrl()}
+                            alt={data.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        )
+                      ) : (
+                        <iframe
+                          src={getViewerUrl()}
+                          style={{ width: '100%', height: '100%', border: 'none' }}
+                          title={data.name}
+                        />
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  /* No preview available for this file type */
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '32px 16px', backgroundColor: '#F7F8FA', border: '1px solid #E5E7EB', borderRadius: '14px', textAlign: 'center' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: extStyle.grad, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FileText size={26} color={extStyle.color} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: '#112235', marginBottom: '6px' }}>Preview not available</div>
+                      <div style={{ fontSize: '13px', color: '#6B7280', lineHeight: 1.6 }}>
+                        <strong>{ext}</strong> files cannot be previewed in the browser.<br />
+                        This link is view only — downloading is not permitted.
+                      </div>
+                    </div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', backgroundColor: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '8px' }}>
+                      <EyeOff size={13} color="#D97706" />
+                      <span style={{ fontSize: '12px', color: '#92400E', fontWeight: '600' }}>Contact the sender if you need access to this file</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Trust row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', marginTop: '16px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <ShieldCheck size={12} color="#9CA3AF" />
+                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Encrypted</span>
+                  </div>
+                  <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#E5E7EB' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <EyeOff size={12} color="#9CA3AF" />
+                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>View only</span>
+                  </div>
+                  <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#E5E7EB' }} />
+                  <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: '600' }}>© GhIPSS</span>
+                </div>
               </div>
             ) : (
+              /* ── DOWNLOAD MODE ── */
               <>
-                {/* Shared with label */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', backgroundColor: '#F7F8FA', border: '1px solid #E5E7EB', borderRadius: '10px', marginBottom: '20px' }}>
                   <ShieldCheck size={14} color="#306196" />
                   <span style={{ fontSize: '12px', color: '#374151', fontWeight: '500' }}>
-                    This file was securely shared via <strong style={{ color: '#306196' }}>ORAD GhIPSS Operations Portal</strong>
+                    Securely shared via <strong style={{ color: '#306196' }}>ORAD GhIPSS Operations Portal</strong>
                   </span>
                 </div>
 
-                {/* Download button */}
                 <button
                   onClick={handleDownload}
                   disabled={downloading || done}
                   style={{
                     width: '100%', padding: '15px',
-                    background: done
-                      ? 'linear-gradient(135deg, #059669, #047857)'
-                      : 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 50%, #306196 100%)',
+                    background: done ? 'linear-gradient(135deg, #059669, #047857)' : 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 50%, #306196 100%)',
                     color: '#FFFFFF', border: 'none', borderRadius: '12px',
                     fontSize: '15px', fontWeight: '700',
                     cursor: downloading || done ? 'default' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px',
                     boxShadow: done ? '0 4px 16px rgba(5,150,105,0.35)' : '0 4px 20px rgba(48,97,150,0.45)',
-                    transition: 'all 0.2s', letterSpacing: '-0.2px',
+                    transition: 'all 0.2s',
                   }}
                   onMouseEnter={e => { if (!downloading && !done) e.currentTarget.style.boxShadow = '0 8px 28px rgba(48,97,150,0.6)'; }}
                   onMouseLeave={e => { if (!downloading && !done) e.currentTarget.style.boxShadow = '0 4px 20px rgba(48,97,150,0.45)'; }}
@@ -186,16 +268,15 @@ export default function GuestPage() {
                   {done ? 'Downloaded successfully' : downloading ? 'Preparing download…' : 'Download File'}
                 </button>
 
-                {/* Trust badges */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginTop: '20px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', marginTop: '18px', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <ShieldCheck size={12} color="#9CA3AF" />
-                    <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: '500' }}>Encrypted</span>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Encrypted</span>
                   </div>
                   <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#E5E7EB' }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <Clock size={12} color="#9CA3AF" />
-                    <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: '500' }}>Time-limited</span>
+                    <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Time-limited</span>
                   </div>
                   <span style={{ width: '3px', height: '3px', borderRadius: '50%', backgroundColor: '#E5E7EB' }} />
                   <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: '600' }}>© GhIPSS</span>
@@ -207,8 +288,8 @@ export default function GuestPage() {
       </div>
 
       {/* Footer */}
-      <div style={{ position: 'relative', zIndex: 10, marginTop: '28px', textAlign: 'center' }}>
-        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: '500', margin: 0 }}>
+      <div style={{ position: 'relative', zIndex: 10, marginTop: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', margin: 0 }}>
           Ghana Interbank Payment & Settlement Systems · ORAD Operations Portal
         </p>
       </div>

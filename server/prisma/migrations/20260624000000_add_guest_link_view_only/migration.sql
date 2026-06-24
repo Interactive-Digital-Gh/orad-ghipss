@@ -1,0 +1,1 @@
+ALTER TABLE "guest_links" ADD COLUMN "viewOnly" BOOLEAN NOT NULL DEFAULT false;

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Link2, Copy, Trash2, Plus, Clock, Eye, X, Share2, FileText, Check, AlertTriangle } from 'lucide-react';
+import { Link2, Copy, Trash2, Plus, Clock, Eye, EyeOff, Download, X, Share2, FileText, Check, AlertTriangle } from 'lucide-react';
 import api from '../../api/axios.js';
 
 export default function GuestLinkModal({ doc, onClose }) {
   const [links, setLinks]       = useState([]);
   const [loading, setLoading]   = useState(true);
   const [creating, setCreating] = useState(false);
-  const [form, setForm]         = useState({ label: '', expiresAt: '', maxViews: '' });
+  const [form, setForm]         = useState({ label: '', expiresAt: '', maxViews: '', viewOnly: false });
   const [copied, setCopied]     = useState(null);
   const [revoking, setRevoking] = useState(null);
   const [focused, setFocused]   = useState('');
@@ -29,8 +29,9 @@ export default function GuestLinkModal({ doc, onClose }) {
         label: form.label || undefined,
         expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : undefined,
         maxViews: form.maxViews ? parseInt(form.maxViews) : undefined,
+        viewOnly: form.viewOnly,
       });
-      setForm({ label: '', expiresAt: '', maxViews: '' });
+      setForm({ label: '', expiresAt: '', maxViews: '', viewOnly: false });
       loadLinks();
     } catch (err) { console.error(err); }
     finally { setCreating(false); }
@@ -136,6 +137,27 @@ export default function GuestLinkModal({ doc, onClose }) {
                     style={inputStyle('views')} onFocus={() => setFocused('views')} onBlur={() => setFocused('')} />
                 </div>
               </div>
+              {/* View only toggle */}
+              <div
+                onClick={() => setForm(f => ({ ...f, viewOnly: !f.viewOnly }))}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '8px', border: `1.5px solid ${form.viewOnly ? '#306196' : '#E5E7EB'}`, backgroundColor: form.viewOnly ? '#EEF4FF' : '#FFFFFF', cursor: 'pointer', marginBottom: '12px', transition: 'all 0.15s', userSelect: 'none' }}
+              >
+                <div style={{ width: '36px', height: '20px', borderRadius: '10px', backgroundColor: form.viewOnly ? '#306196' : '#D1D5DB', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}>
+                  <div style={{ position: 'absolute', top: '2px', left: form.viewOnly ? '18px' : '2px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', transition: 'left 0.2s' }} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {form.viewOnly ? <EyeOff size={13} color="#306196" /> : <Download size={13} color="#6B7280" />}
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: form.viewOnly ? '#306196' : '#374151' }}>
+                      {form.viewOnly ? 'View only — no download' : 'Allow download'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '1px' }}>
+                    {form.viewOnly ? 'Recipient can view the file in browser but cannot download it' : 'Recipient can download the file to their device'}
+                  </div>
+                </div>
+              </div>
+
               <button type="submit" disabled={creating}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 18px', backgroundColor: creating ? '#9CA3AF' : '#306196', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: creating ? 'not-allowed' : 'pointer', transition: 'background 0.15s', boxShadow: creating ? 'none' : '0 3px 10px rgba(48,97,150,0.25)' }}
                 onMouseEnter={e => { if (!creating) e.currentTarget.style.backgroundColor = '#245078'; }}
@@ -182,6 +204,11 @@ export default function GuestLinkModal({ doc, onClose }) {
                             <span style={{ fontSize: '13px', fontWeight: '700', color: expired ? '#DC2626' : '#112235' }}>{link.label || 'Guest Link'}</span>
                             {expired && (
                               <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '5px', backgroundColor: '#FEE2E2', color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Expired</span>
+                            )}
+                            {link.viewOnly && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: '700', padding: '2px 7px', borderRadius: '5px', backgroundColor: '#EEF4FF', color: '#306196', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                <EyeOff size={9} /> View only
+                              </span>
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

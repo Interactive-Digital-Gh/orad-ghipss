@@ -168,6 +168,7 @@ model GuestLink {
   expiresAt   DateTime?
   maxViews    Int?
   viewCount   Int       @default(0)
+  viewOnly    Boolean   @default(false)
   createdAt   DateTime  @default(now())
 
   @@map("guest_links")

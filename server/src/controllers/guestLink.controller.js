@@ -11,6 +11,7 @@ const createSchema = z.object({
   label: z.string().optional(),
   expiresAt: z.string().datetime().optional(),
   maxViews: z.number().int().positive().optional(),
+  viewOnly: z.boolean().optional(),
 });
 
 export const createGuestLink = asyncHandler(async (req, res) => {
@@ -26,6 +27,7 @@ export const createGuestLink = asyncHandler(async (req, res) => {
       label: data.label || null,
       expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       maxViews: data.maxViews || null,
+      viewOnly: data.viewOnly || false,
     },
   });
 
@@ -51,6 +53,29 @@ export const getDocumentGuestLinks = asyncHandler(async (req, res) => {
   });
   const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
   res.json(links.map(l => ({ ...l, url: `${baseUrl}/guest/${l.token}` })));
+});
+
+// Serves the actual file — inline (for viewer) or as attachment (for download)
+export const serveGuestFile = asyncHandler(async (req, res) => {
+  const link = await prisma.guestLink.findUnique({
+    where: { token: req.params.token },
+    include: { document: true },
+  });
+
+  if (!link) return res.status(404).json({ error: 'Link not found' });
+  if (link.expiresAt && new Date() > link.expiresAt) return res.status(410).json({ error: 'Link expired' });
+  if (link.maxViews && link.viewCount >= link.maxViews) return res.status(410).json({ error: 'View limit reached' });
+  if (link.document.deletedAt) return res.status(404).json({ error: 'Document no longer available' });
+
+  const inline = req.query.inline === 'true';
+  // Block download if viewOnly
+  if (link.viewOnly && !inline) return res.status(403).json({ error: 'This link is view-only. Downloading is not permitted.' });
+
+  const filePath = path.join(__dirname, '../../../uploads', link.document.storageKey);
+  const disposition = inline ? 'inline' : 'attachment';
+  res.setHeader('Content-Disposition', `${disposition}; filename="${link.document.name}"`);
+  res.setHeader('Content-Type', link.document.mimeType || 'application/octet-stream');
+  res.sendFile(filePath, { root: '/' });
 });
 
 export const deleteGuestLink = asyncHandler(async (req, res) => {
@@ -81,11 +106,14 @@ export const serveGuestLink = asyncHandler(async (req, res) => {
     data: { viewCount: { increment: 1 } },
   });
 
+  const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
   res.json({
     name: link.document.name,
     mimeType: link.document.mimeType,
     sizeBytes: link.document.sizeBytes,
-    downloadUrl: `http://localhost:4000/files/${link.document.storageKey}`,
+    downloadUrl: `${baseUrl}/api/guest/${link.token}/file`,
+    viewUrl: `${baseUrl}/api/guest/${link.token}/file?inline=true`,
     label: link.label,
+    viewOnly: link.viewOnly,
   });
 });
