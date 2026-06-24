@@ -41,7 +41,9 @@ export const createGuestLink = asyncHandler(async (req, res) => {
     userAgent: req.headers['user-agent'],
   });
 
-  const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+  const host = req.get('host');
+  const protocol = process.env.CLIENT_URL ? new URL(process.env.CLIENT_URL).protocol.replace(':', '') : (req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : req.protocol);
+  const baseUrl = process.env.CLIENT_URL || `${protocol}://${host}`;
   res.status(201).json({ ...link, url: `${baseUrl}/guest/${link.token}` });
 });
 
@@ -51,7 +53,9 @@ export const getDocumentGuestLinks = asyncHandler(async (req, res) => {
     include: { creator: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   });
-  const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+  const host = req.get('host');
+  const protocol = process.env.CLIENT_URL ? new URL(process.env.CLIENT_URL).protocol.replace(':', '') : (req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : req.protocol);
+  const baseUrl = process.env.CLIENT_URL || `${protocol}://${host}`;
   res.json(links.map(l => ({ ...l, url: `${baseUrl}/guest/${l.token}` })));
 });
 
@@ -106,7 +110,9 @@ export const serveGuestLink = asyncHandler(async (req, res) => {
     data: { viewCount: { increment: 1 } },
   });
 
-  const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+  const host = req.get('host');
+  const protocol = process.env.CLIENT_URL ? new URL(process.env.CLIENT_URL).protocol.replace(':', '') : (req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : req.protocol);
+  const baseUrl = process.env.CLIENT_URL || `${protocol}://${host}`;
   res.json({
     name: link.document.name,
     mimeType: link.document.mimeType,
