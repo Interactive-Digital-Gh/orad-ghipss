@@ -54,7 +54,7 @@ function AppLayout({ children }) {
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{
             position: 'fixed',
-            top: '52px',
+            top: '40px',
             left: `${sidebarWidth - 13}px`,
             zIndex: 50,
             width: '26px', height: '26px', borderRadius: '50%',
