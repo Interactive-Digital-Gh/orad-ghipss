@@ -38,11 +38,14 @@ function DocxViewer({ viewUrl }) {
   const [renderError, setRenderError] = useState('');
 
   useEffect(() => {
-    fetch(viewUrl)
-      .then(r => r.arrayBuffer())
+    fetch(viewUrl, { credentials: 'include' })
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.arrayBuffer();
+      })
       .then(buf => mammoth.convertToHtml({ arrayBuffer: buf }))
       .then(result => { setHtml(result.value); setRenderLoading(false); })
-      .catch(() => { setRenderError('Could not render document.'); setRenderLoading(false); });
+      .catch(err => { setRenderError(`Could not render document: ${err.message}`); setRenderLoading(false); });
   }, [viewUrl]);
 
   if (renderLoading) return (
