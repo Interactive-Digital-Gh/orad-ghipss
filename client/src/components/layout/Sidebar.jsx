@@ -78,7 +78,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose = ()
       {/* Brand */}
       <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #1B3A5C', minHeight: '65px' }}>
         {collapsed && !isMobile
-          ? <img src="/ghipss-icon.svg" alt="GhIPSS" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
+          ? <img src="/ghipss-icon.svg" alt="GhIPSS" style={{ height: '42px', width: '42px', objectFit: 'contain' }} />
           : <img src="/orad-logo.svg" alt="ORAD" style={{ height: '30px', width: 'auto', objectFit: 'contain' }} />
         }
       </div>
