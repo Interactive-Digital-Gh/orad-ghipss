@@ -20,7 +20,7 @@ async function main() {
     });
   }
 
-  const password = await bcrypt.hash(process.env.ADMIN_DEFAULT_PASSWORD || 'change-me-immediately', 12);
+  const password = await bcrypt.hash(process.env.ADMIN_DEFAULT_PASSWORD || 'Ghipps2024!', 12);
 
   await prisma.user.upsert({
     where: { username: 'admin' },
