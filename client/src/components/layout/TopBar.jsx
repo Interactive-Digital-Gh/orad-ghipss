@@ -84,7 +84,7 @@ export default function TopBar({ title, subtitle, icon: PageIcon, breadcrumb, ac
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: '15px', fontWeight: '800', color: '#112235', margin: 0, letterSpacing: '-0.2px' }}>{title}</h1>
+            <h1 style={{ fontSize: '15px', fontWeight: '600', color: '#1D3A5A', margin: 0, letterSpacing: '-0.2px' }}>{title}</h1>
             {subtitle && (
               <span style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280', backgroundColor: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '6px', padding: '2px 8px', whiteSpace: 'nowrap' }}>
                 {subtitle}

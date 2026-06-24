@@ -55,15 +55,10 @@ export default function Sidebar() {
       position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
     }}>
       {/* Brand */}
-      <div style={{ padding: '18px 16px 14px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #E5E7EB' }}>
-        <img src="/ghipss-logo.png" alt="GhIPSS"
-          style={{ height: '32px', width: 'auto', objectFit: 'contain', flexShrink: 0 }}
-          onError={e => { e.target.src = '/ghipss-logo.svg'; }}
+      <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #1B3A5C' }}>
+        <img src="/orad-logo.svg" alt="ORAD"
+          style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
         />
-        <div>
-          <div style={{ fontSize: '14px', fontWeight: '800', color: '#112235', letterSpacing: '-0.2px', lineHeight: 1 }}>ORAD</div>
-          <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '2px', fontWeight: '500' }}>Ops Portal</div>
-        </div>
       </div>
 
       {/* Nav */}
@@ -103,7 +98,6 @@ export default function Sidebar() {
               </>
             )}
           </NavLink>
-          {navItem('/activity', 'Activity Log', ClipboardList)}
         </div>
 
         {/* ADMINISTRATION — admin only */}
@@ -172,6 +166,7 @@ export default function Sidebar() {
             )}
 
             {navItem('/requests', 'Access Requests', Inbox)}
+            {navItem('/activity', 'Activity Log', ClipboardList)}
           </div>
         )}
       </nav>

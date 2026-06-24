@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, BookOpen, Handshake, GraduationCap, ShieldAlert, Folder, Lock, Filter, Search, X, SlidersHorizontal, Edit2, Trash2, MoreHorizontal, ArrowRight, Files } from 'lucide-react';
+import { Plus, FileText, BookOpen, ShieldAlert, Folder, Lock, Filter, Search, X, SlidersHorizontal, Edit2, Trash2, MoreHorizontal, ArrowRight, Files, ShieldCheck, BarChart2, Briefcase, Key, ClipboardList, Archive, Bookmark, Lightbulb, Star, Users, Settings, TrendingUp, Building2, FileBadge, Globe, Layers, Database, FileCode, Bell, Package } from 'lucide-react';
 import api from '../api/axios.js';
 import { useAuth } from '../hooks/useAuth.js';
 import TopBar from '../components/layout/TopBar.jsx';
@@ -10,14 +10,18 @@ import AccessRequestModal from '../components/directory/AccessRequestModal.jsx';
 import Toast from '../components/ui/Toast.jsx';
 import RoleBadge from '../components/ui/RoleBadge.jsx';
 
-/* ─── Folder meta ─── */
-const FOLDER_ICONS = {
-  'f-sop':      { Icon: FileText,    color: '#306196' },
-  'f-manuals':  { Icon: BookOpen,    color: '#059669' },
-  'f-partner':  { Icon: Handshake,   color: '#D97706' },
-  'f-onboard':  { Icon: GraduationCap, color: '#2563EB' },
-  'f-internal': { Icon: ShieldAlert, color: '#DC2626' },
+/* ─── Icon lookup map ─── */
+const ICON_MAP = {
+  Folder, FileText, BookOpen, ShieldCheck, ShieldAlert, BarChart2, Briefcase,
+  Key, ClipboardList, Archive, Bookmark, Lightbulb, Star,
+  Users, Settings, Lock, TrendingUp, Building2, FileBadge,
+  Globe, Layers, Database, FileCode, Bell, Package,
 };
+function getFolderIcon(folder) {
+  const Icon = ICON_MAP[folder.icon] || Folder;
+  const color = folder.color || '#306196';
+  return { Icon, color };
+}
 const KNOWN_LOCKED = [
   { id: 'f-sop',      name: 'Standard Operating Procedures', allowedRoles: ['admin','member','viewer'] },
   { id: 'f-manuals',  name: 'Product Manuals',               allowedRoles: ['admin','member'] },
@@ -124,13 +128,12 @@ export default function DirectoryPage() {
   };
 
   const sectionLabel = (text) => (
-    <div style={{ fontSize: '15px', fontWeight: '700', color: '#112235' }}>{text}</div>
+    <div style={{ fontSize: '15px', fontWeight: '600', color: '#1D3A5A' }}>{text}</div>
   );
 
   /* ── ZONE 1: Folder Cards Strip ── */
   const FolderCardStrip = ({ folder, locked }) => {
-    const meta = FOLDER_ICONS[folder.id] || { Icon: Folder, color: '#6B7280' };
-    const { Icon, color } = meta;
+    const { Icon, color } = getFolderIcon(folder);
     const [hovered, setHovered] = useState(false);
     const docCount = folder._count?.documents ?? 0;
 
@@ -191,20 +194,20 @@ export default function DirectoryPage() {
         {/* Colored banner */}
         <div style={{
           height: '100px',
-          background: `linear-gradient(135deg, ${color}12 0%, ${color}22 100%)`,
+          background: `linear-gradient(135deg, ${color}28 0%, ${color}42 100%)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           position: 'relative', overflow: 'hidden',
         }}>
           {/* Decorative orb */}
-          <div style={{ position: 'absolute', right: '-20px', top: '-20px', width: '90px', height: '90px', borderRadius: '50%', background: `${color}0D`, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', right: '-20px', top: '-20px', width: '90px', height: '90px', borderRadius: '50%', background: `${color}22`, pointerEvents: 'none' }} />
           {/* Doc count chip */}
-          <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', alignItems: 'center', gap: '3px', backgroundColor: 'rgba(255,255,255,0.85)', border: `1px solid ${color}25`, borderRadius: '6px', padding: '2px 7px', backdropFilter: 'blur(4px)' }}>
+          <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', alignItems: 'center', gap: '3px', backgroundColor: 'rgba(255,255,255,0.88)', border: `1px solid ${color}30`, borderRadius: '6px', padding: '2px 7px', backdropFilter: 'blur(4px)' }}>
             <Files size={9} color={color} />
             <span style={{ fontSize: '10px', fontWeight: '700', color }}>{docCount}</span>
           </div>
-          {/* Icon */}
-          <div style={{ width: '54px', height: '54px', borderRadius: '14px', backgroundColor: 'rgba(255,255,255,0.82)', border: `1px solid ${color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)', boxShadow: `0 4px 12px ${color}18` }}>
-            <Icon size={24} color={color} />
+          {/* Icon — solid color bg, white icon (matches modal preview) */}
+          <div style={{ width: '54px', height: '54px', borderRadius: '14px', backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 16px ${color}55` }}>
+            <Icon size={24} color="#FFFFFF" />
           </div>
         </div>
 
@@ -272,7 +275,7 @@ export default function DirectoryPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar title="Documents" icon={Folder} />
+      <TopBar title="Documents" icon={Folder} breadcrumb={[{ label: 'Workspace' }, { label: 'Documents' }]} />
 
       <div style={{ padding: '28px', flex: 1 }}>
 
@@ -301,28 +304,9 @@ export default function DirectoryPage() {
                   {visibleFolders.map(f => (
                     <FolderCardStrip key={f.id} folder={f} locked={f.locked} />
                   ))}
-                  {/* Admin: + New Folder card — only show in expanded view or when ≤7 total */}
+                  {/* Admin: + New Folder card */}
                   {isAdmin && (showAllFolders || allFolders.length < FOLDERS_VISIBLE) && (
-                    <div
-                      onClick={() => setShowCreate(true)}
-                      style={{
-                        border: '1.5px dashed #D1D5DB', borderRadius: '14px',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                        cursor: 'pointer', transition: 'all 0.18s',
-                        backgroundColor: 'transparent',
-                        minHeight: '162px',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#306196'; e.currentTarget.style.backgroundColor = '#F0F6FF'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.backgroundColor = 'transparent'; }}
-                    >
-                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#EEF4FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Plus size={22} color="#306196" />
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#306196' }}>New Folder</div>
-                        <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>Create a folder</div>
-                      </div>
-                    </div>
+                    <NewFolderCard onClick={() => setShowCreate(true)} />
                   )}
                 </div>
 
@@ -381,10 +365,10 @@ export default function DirectoryPage() {
                   <th style={{ width: '40px', padding: '10px 16px', textAlign: 'left' }}>
                     <input type="checkbox" style={{ accentColor: '#306196', cursor: 'pointer' }} readOnly />
                   </th>
-                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Name</th>
-                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Access</th>
-                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Documents</th>
-                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Last Updated</th>
+                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#1D3A5A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Name</th>
+                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#1D3A5A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Access</th>
+                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#1D3A5A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Documents</th>
+                  <th style={{ padding: '10px 18px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#1D3A5A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Last Updated</th>
                   {isAdmin && <th style={{ width: '80px' }} />}
                 </tr>
               </thead>
@@ -392,14 +376,11 @@ export default function DirectoryPage() {
                 {tableFolders.length === 0 ? (
                   <tr><td colSpan={isAdmin ? 6 : 5} style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF', fontSize: '13px' }}>No folders found</td></tr>
                 ) : tableFolders.map((folder, idx) => {
-                  const meta = FOLDER_ICONS[folder.id] || { Icon: Folder, color: '#6B7280' };
-                  const { Icon, color } = meta;
                   const isLast = idx === tableFolders.length - 1;
                   return (
                     <FolderTableRow
                       key={folder.id}
                       folder={folder}
-                      meta={meta}
                       isLast={isLast}
                       isAdmin={isAdmin}
                       onNavigate={() => !folder.locked && navigate(`/directory/${folder.id}`)}
@@ -575,10 +556,57 @@ export default function DirectoryPage() {
   );
 }
 
-/* ── Folder Table Row (needs hover state) ── */
-function FolderTableRow({ folder, meta, isLast, isAdmin, onNavigate, onEdit, onDelete, onRequest }) {
+/* ── New Folder Card ── */
+function NewFolderCard({ onClick }) {
   const [hovered, setHovered] = useState(false);
-  const { Icon, color } = meta;
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        borderRadius: '14px',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '12px',
+        overflow: 'hidden',
+        border: `1.5px dashed ${hovered ? '#306196' : '#CBD5E1'}`,
+        backgroundColor: hovered ? '#EEF4FF' : '#FAFBFC',
+        transition: 'all 0.18s',
+        transform: hovered ? 'translateY(-2px)' : 'none',
+        boxShadow: hovered ? '0 8px 24px rgba(48,97,150,0.12)' : 'none',
+        minHeight: '162px',
+        padding: '0 16px',
+      }}
+    >
+      <div style={{
+        width: '44px', height: '44px', borderRadius: '12px',
+        backgroundColor: hovered ? '#306196' : '#E2EAF3',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all 0.18s',
+        boxShadow: hovered ? '0 4px 14px rgba(48,97,150,0.28)' : 'none',
+      }}>
+        <Plus size={20} color={hovered ? '#FFFFFF' : '#7B93A8'} strokeWidth={2.5} />
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: hovered ? '#306196' : '#1D3A5A', transition: 'color 0.15s', marginBottom: '3px' }}>
+          New Folder
+        </div>
+        <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
+          Create a folder
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Folder Table Row (needs hover state) ── */
+function FolderTableRow({ folder, isLast, isAdmin, onNavigate, onEdit, onDelete, onRequest }) {
+  const [hovered, setHovered] = useState(false);
+  const { Icon, color } = getFolderIcon(folder);
   const tdStyle = {
     padding: '12px 18px',
     fontSize: '13px',

@@ -8,6 +8,7 @@ import { z } from 'zod';
 const createSchema = z.object({
   folderId: z.string(),
   reason: z.string().min(10),
+  requestType: z.enum(['view', 'upload']).optional().default('view'),
 });
 
 const reviewSchema = z.object({
@@ -17,15 +18,10 @@ const reviewSchema = z.object({
 
 // Submit an access request (any authenticated user)
 export const createAccessRequest = asyncHandler(async (req, res) => {
-  const { folderId, reason } = createSchema.parse(req.body);
+  const { folderId, reason, requestType } = createSchema.parse(req.body);
 
   const folder = await prisma.folder.findUnique({ where: { id: folderId } });
   if (!folder) return res.status(404).json({ error: 'Folder not found' });
-
-  // Already has access
-  if (folder.allowedRoles.includes(req.user.role)) {
-    return res.status(400).json({ error: 'You already have access to this folder' });
-  }
 
   const existing = await prisma.accessRequest.findUnique({
     where: { userId_folderId: { userId: req.user.id, folderId } },
@@ -36,8 +32,8 @@ export const createAccessRequest = asyncHandler(async (req, res) => {
 
   const request = await prisma.accessRequest.upsert({
     where: { userId_folderId: { userId: req.user.id, folderId } },
-    update: { reason, status: 'pending', reviewedBy: null, reviewNote: null, reviewedAt: null, createdAt: new Date() },
-    create: { userId: req.user.id, folderId, reason },
+    update: { reason, requestType, status: 'pending', reviewedBy: null, reviewNote: null, reviewedAt: null, createdAt: new Date() },
+    create: { userId: req.user.id, folderId, reason, requestType },
     include: { folder: { select: { name: true } }, user: { select: { name: true } } },
   });
 
@@ -91,6 +87,16 @@ export const reviewAccessRequest = asyncHandler(async (req, res) => {
       folder: { select: { id: true, name: true } },
     },
   });
+
+  // Auto-grant folder access on approval
+  if (status === 'approved') {
+    const canUpload = request.requestType === 'upload';
+    await prisma.userFolderAccess.upsert({
+      where: { userId_folderId: { userId: request.userId, folderId: request.folderId } },
+      update: { canView: true, canUpload, grantedBy: req.user.id },
+      create: { userId: request.userId, folderId: request.folderId, canView: true, canUpload, grantedBy: req.user.id },
+    });
+  }
 
   await createLog({
     userId: req.user.id,

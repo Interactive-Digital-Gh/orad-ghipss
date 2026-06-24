@@ -85,7 +85,7 @@ export default function MyActivityPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#F7F8FA' }}>
-      <TopBar title="My Activity" icon={Activity} />
+      <TopBar title="My Activity" icon={Activity} breadcrumb={[{ label: 'Tracking' }, { label: 'My Activity' }]} />
       <div style={{ padding: '28px', flex: 1 }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px', color: '#9CA3AF', fontSize: '13px' }}>Loading…</div>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, CheckCircle2, X, FolderLock, Send, ShieldCheck } from 'lucide-react';
+import { Lock, CheckCircle2, X, FolderLock, Send, ShieldCheck, Eye, Upload } from 'lucide-react';
 import api from '../../api/axios.js';
 
-export default function AccessRequestModal({ folder, onClose, onSubmitted }) {
+export default function AccessRequestModal({ folder, onClose, onSubmitted, defaultType = 'view' }) {
   const [reason, setReason] = useState('');
+  const [requestType, setRequestType] = useState(defaultType);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
@@ -15,7 +16,7 @@ export default function AccessRequestModal({ folder, onClose, onSubmitted }) {
     setLoading(true);
     setError('');
     try {
-      await api.post('/access-requests', { folderId: folder.id, reason });
+      await api.post('/access-requests', { folderId: folder.id, reason, requestType });
       setDone(true);
       setTimeout(onSubmitted, 2000);
     } catch (err) {
@@ -90,6 +91,35 @@ export default function AccessRequestModal({ folder, onClose, onSubmitted }) {
                   <X size={13} /> {error}
                 </div>
               )}
+
+              {/* Access type selector */}
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+                Access type
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                {[
+                  { value: 'view', label: 'View only', desc: 'Read & download documents', Icon: Eye },
+                  { value: 'upload', label: 'View & upload', desc: 'Read, download & upload', Icon: Upload },
+                ].map(({ value, label, desc, Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRequestType(value)}
+                    style={{
+                      flex: 1, padding: '10px 12px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.1s',
+                      border: requestType === value ? '2px solid #306196' : '2px solid #E5E7EB',
+                      backgroundColor: requestType === value ? '#EEF4FF' : '#F9FAFB',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                      <Icon size={13} color={requestType === value ? '#306196' : '#6B7280'} />
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: requestType === value ? '#306196' : '#374151' }}>{label}</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#9CA3AF' }}>{desc}</div>
+                  </button>
+                ))}
+              </div>
+
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
                 Reason for access
               </label>

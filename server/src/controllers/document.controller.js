@@ -9,9 +9,31 @@ import { watermarkPdf } from '../services/watermark.service.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const assertFolderAccess = (folder, userRole) => {
-  if (!folder.allowedRoles.includes(userRole)) {
+// Admins always have full access. Others need a UserFolderAccess record.
+const getFolderPermission = async (folderId, userId, userRole) => {
+  if (userRole === 'admin') return { canView: true, canUpload: true };
+  const access = await prisma.userFolderAccess.findUnique({
+    where: { userId_folderId: { userId, folderId } },
+  });
+  if (!access || (access.expiresAt && access.expiresAt < new Date())) {
+    return { canView: false, canUpload: false };
+  }
+  return { canView: access.canView, canUpload: access.canUpload };
+};
+
+const assertCanView = async (folderId, userId, userRole) => {
+  const { canView } = await getFolderPermission(folderId, userId, userRole);
+  if (!canView) {
     const err = new Error('You do not have access to this folder');
+    err.status = 403;
+    throw err;
+  }
+};
+
+const assertCanUpload = async (folderId, userId, userRole) => {
+  const { canUpload } = await getFolderPermission(folderId, userId, userRole);
+  if (!canUpload) {
+    const err = new Error('You do not have upload access to this folder');
     err.status = 403;
     throw err;
   }
@@ -21,7 +43,7 @@ export const getDocuments = asyncHandler(async (req, res) => {
   const { folderId } = req.params;
   const folder = await prisma.folder.findUnique({ where: { id: folderId } });
   if (!folder) return res.status(404).json({ error: 'Folder not found' });
-  assertFolderAccess(folder, req.user.role);
+  await assertCanView(folderId, req.user.id, req.user.role);
 
   const documents = await prisma.document.findMany({
     where: { folderId, deletedAt: null },
@@ -40,7 +62,7 @@ export const uploadDocument = asyncHandler(async (req, res) => {
   const { folderId } = req.params;
   const folder = await prisma.folder.findUnique({ where: { id: folderId } });
   if (!folder) return res.status(404).json({ error: 'Folder not found' });
-  assertFolderAccess(folder, req.user.role);
+  await assertCanUpload(folderId, req.user.id, req.user.role);
 
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -81,7 +103,7 @@ export const viewDocument = asyncHandler(async (req, res) => {
     include: { folder: true },
   });
   if (!doc || doc.deletedAt) return res.status(404).json({ error: 'Document not found' });
-  assertFolderAccess(doc.folder, req.user.role);
+  await assertCanView(doc.folderId, req.user.id, req.user.role);
 
   const url = await getPresignedUrl(doc.storageKey);
   res.json({ url });
@@ -94,7 +116,7 @@ export const viewDocumentBlob = asyncHandler(async (req, res) => {
     include: { folder: true },
   });
   if (!doc || doc.deletedAt) return res.status(404).json({ error: 'Document not found' });
-  assertFolderAccess(doc.folder, req.user.role);
+  await assertCanView(doc.folderId, req.user.id, req.user.role);
 
   const { readFile } = await import('fs/promises');
   const filePath = path.join(__dirname, '../../uploads', doc.storageKey);
@@ -112,7 +134,7 @@ export const downloadDocument = asyncHandler(async (req, res) => {
   });
 
   if (!doc || doc.deletedAt) return res.status(404).json({ error: 'Document not found' });
-  assertFolderAccess(doc.folder, req.user.role);
+  await assertCanView(doc.folderId, req.user.id, req.user.role);
 
   await createLog({
     userId: req.user.id,

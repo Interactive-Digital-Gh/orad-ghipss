@@ -50,24 +50,26 @@ export default function Modal({ title, subtitle, onClose, footer, children, widt
         {/* Header */}
         <div style={{
           padding: '18px 20px 16px',
-          borderBottom: '1px solid #F3F4F6',
+          background: danger
+            ? 'linear-gradient(135deg, #7F1D1D 0%, #991B1B 60%, #DC2626 100%)'
+            : 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 60%, #306196 100%)',
           display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px',
           flexShrink: 0,
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: danger ? '#DC2626' : '#112235', lineHeight: 1.3 }}>{title}</h2>
-            {subtitle && <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#6B7280', lineHeight: 1.5 }}>{subtitle}</p>}
+            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#FFFFFF', lineHeight: 1.3 }}>{title}</h2>
+            {subtitle && <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
             style={{
               width: '28px', height: '28px', borderRadius: '7px', flexShrink: 0,
-              background: 'none', border: '1px solid #E5E7EB', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#9CA3AF', transition: 'all 0.1s', marginTop: '-2px',
+              color: 'rgba(255,255,255,0.7)', transition: 'all 0.1s', marginTop: '-2px',
             }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.color = '#374151'; e.currentTarget.style.borderColor = '#D1D5DB'; }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.borderColor = '#E5E7EB'; }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = '#FFFFFF'; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
           >
             <X size={14} />
           </button>

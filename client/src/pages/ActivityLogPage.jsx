@@ -61,7 +61,7 @@ export default function ActivityLogPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar title="Activity Log" icon={Activity} />
+      <TopBar title="Activity Log" icon={Activity} breadcrumb={[{ label: 'Tracking' }, { label: 'Activity Log' }]} />
       <div style={{ padding: '28px', flex: 1 }}>
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
           <StatCard label="Downloads" value={downloads} Icon={Download} color="#306196" bg="#EEF4FF" />

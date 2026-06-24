@@ -432,7 +432,7 @@ export default function ProfilePage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <TopBar title="Profile" icon={User} />
+      <TopBar title="Profile" icon={User} breadcrumb={[{ label: 'Account' }, { label: 'Profile' }]} />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left nav */}

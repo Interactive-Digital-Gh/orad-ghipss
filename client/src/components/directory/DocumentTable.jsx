@@ -114,7 +114,7 @@ const TH_BASE = {
 };
 
 // ─── DocumentTable ────────────────────────────────────────────────────────────
-export default function DocumentTable({ documents, userRole, onDelete, onToast, onRefresh, onUpload }) {
+export default function DocumentTable({ documents, userRole, canUpload, onDelete, onToast, onRefresh, onUpload }) {
   const [selected, setSelected]     = useState(new Set());
   const [hoveredId, setHoveredId]   = useState(null);
   const [shareDoc, setShareDoc]     = useState(null);
@@ -269,7 +269,7 @@ export default function DocumentTable({ documents, userRole, onDelete, onToast, 
             ))}
           </div>
           <GhostBtn>▽ Filters</GhostBtn>
-          {userRole === 'admin' && (
+          {canUpload && (
             <button
               onClick={onUpload}
               style={{ padding: '7px 14px', backgroundColor: '#306196', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}

@@ -45,7 +45,7 @@ export default function MyRequestsPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#F7F8FA' }}>
-      <TopBar title="My Requests" icon={ClipboardList} />
+      <TopBar title="My Requests" icon={ClipboardList} breadcrumb={[{ label: 'Tracking' }, { label: 'My Requests' }]} />
       <div style={{ padding: '28px', flex: 1 }}>
 
         {loading ? (

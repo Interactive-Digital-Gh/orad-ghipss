@@ -218,7 +218,7 @@ export default function AccessRequestsPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <TopBar title="Access Requests" icon={ShieldCheck} />
+      <TopBar title="Access Requests" icon={ShieldCheck} breadcrumb={[{ label: 'Administration' }, { label: 'Access Requests' }]} />
       <div style={{ padding: '28px', flex: 1 }}>
 
         {/* Tab bar */}
@@ -278,6 +278,7 @@ export default function AccessRequestsPage() {
                 <tr>
                   {thCell('User', User)}
                   {thCell('Folder', Folder)}
+                  {thCell('Access Type', ShieldCheck)}
                   {thCell('Reason', AlignLeft)}
                   {thCell('Submitted', Calendar)}
                   {thCell('Status', ShieldCheck)}
@@ -314,6 +315,14 @@ export default function AccessRequestsPage() {
                       {/* Folder */}
                       <td style={{ ...td, fontWeight: '500', color: '#112235' }}>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{req.folder.name}</div>
+                      </td>
+
+                      {/* Access Type */}
+                      <td style={td}>
+                        {req.requestType === 'upload'
+                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', color: '#059669', backgroundColor: '#D1FAE5' }}>View & Upload</span>
+                          : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 9px', borderRadius: '5px', fontSize: '11px', fontWeight: '700', color: '#306196', backgroundColor: '#EEF4FF' }}>View only</span>
+                        }
                       </td>
 
                       {/* Reason */}

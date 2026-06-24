@@ -90,6 +90,7 @@ model Folder {
   name         String
   description  String?
   icon         String    @default("📁")
+  color        String    @default("#306196")
   allowedRoles Role[]
   announcement String?
   createdAt    DateTime  @default(now())
@@ -144,6 +145,7 @@ model AccessRequest {
   folderId    String
   folder      Folder        @relation(fields: [folderId], references: [id])
   reason      String
+  requestType String        @default("view")
   status      RequestStatus @default(pending)
   reviewedBy  String?
   reviewer    User?         @relation("ReviewedRequests", fields: [reviewedBy], references: [id])
@@ -177,6 +179,8 @@ model UserFolderAccess {
   user        User      @relation("UserAccess", fields: [userId], references: [id])
   folderId    String
   folder      Folder    @relation(fields: [folderId], references: [id])
+  canView     Boolean   @default(true)
+  canUpload   Boolean   @default(false)
   expiresAt   DateTime?
   grantedBy   String
   granter     User      @relation("GrantedAccess", fields: [grantedBy], references: [id])

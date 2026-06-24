@@ -35,7 +35,7 @@ export default function SettingsPage() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#F7F8FA' }}>
-      <TopBar title="Settings" icon={Settings} />
+      <TopBar title="Settings" icon={Settings} breadcrumb={[{ label: 'Account' }, { label: 'Settings' }]} />
       <div style={{ padding: '28px 32px', flex: 1, maxWidth: '680px' }}>
         <div style={{ marginBottom: '8px', fontSize: '10px', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ACCOUNT</div>
         <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden', marginBottom: '24px' }}>

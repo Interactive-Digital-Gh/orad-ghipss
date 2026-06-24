@@ -90,6 +90,7 @@ export default function NotificationsPage() {
       <TopBar
         title="Notifications"
         icon={Bell}
+        breadcrumb={[{ label: 'Tracking' }, { label: 'Notifications' }]}
         actions={
           unreadCount > 0 && (
             <button

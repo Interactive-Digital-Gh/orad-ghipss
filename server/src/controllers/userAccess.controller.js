@@ -5,6 +5,8 @@ import { z } from 'zod';
 
 const grantSchema = z.object({
   folderId: z.string(),
+  canView: z.boolean().optional().default(true),
+  canUpload: z.boolean().optional().default(false),
   expiresAt: z.string().datetime().nullable().optional(),
 });
 
@@ -17,17 +19,19 @@ export const getUserFolderAccess = asyncHandler(async (req, res) => {
 });
 
 export const grantFolderAccess = asyncHandler(async (req, res) => {
-  const { folderId, expiresAt } = grantSchema.parse(req.body);
+  const { folderId, canView, canUpload, expiresAt } = grantSchema.parse(req.body);
 
   const folder = await prisma.folder.findUnique({ where: { id: folderId } });
   if (!folder) return res.status(404).json({ error: 'Folder not found' });
 
   const access = await prisma.userFolderAccess.upsert({
     where: { userId_folderId: { userId: req.params.id, folderId } },
-    update: { expiresAt: expiresAt ? new Date(expiresAt) : null, grantedBy: req.user.id },
+    update: { canView, canUpload, expiresAt: expiresAt ? new Date(expiresAt) : null, grantedBy: req.user.id },
     create: {
       userId: req.params.id,
       folderId,
+      canView,
+      canUpload,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       grantedBy: req.user.id,
     },

@@ -136,40 +136,51 @@ export default function DashboardPage() {
       <div style={{ padding: '24px 32px 32px', flex: 1 }}>
 
         {/* ── Hero banner ── */}
-        <div style={{ background: 'linear-gradient(135deg, #0F2744 0%, #1B3A5C 55%, #306196 100%)', borderRadius: '18px', marginBottom: '20px', position: 'relative', overflow: 'hidden', padding: '28px 32px' }}>
-          <div style={{ position: 'absolute', right: '-60px', top: '-60px', width: '260px', height: '260px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', left: '40%', bottom: '-50px', width: '180px', height: '180px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-              <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {getGreetingIcon()}
-              </div>
-              <div>
-                <div style={{ fontSize: '24px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.4px', lineHeight: 1.1 }}>
-                  Good {getTimeOfDay()}, {user?.name?.split(' ')[0]}!
-                </div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Clock size={11} color="rgba(255,255,255,0.35)" /> {todayStr()}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ background: 'linear-gradient(135deg, #0A1F3C 0%, #0F2744 40%, #1B3A5C 75%, #245A8A 100%)', borderRadius: '20px', marginBottom: '20px', position: 'relative', overflow: 'hidden' }}>
+
+          {/* Background decoration */}
+          <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.07 }} viewBox="0 0 800 200" preserveAspectRatio="xMidYMid slice">
+            <circle cx="700" cy="-40" r="180" fill="white" />
+            <circle cx="750" cy="220" r="120" fill="white" />
+            <circle cx="100" cy="180" r="100" fill="white" />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '340px', background: 'linear-gradient(90deg, transparent, rgba(96,160,220,0.08))', pointerEvents: 'none' }} />
+
+          <div style={{ position: 'relative', padding: '36px 32px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}>
+
+            {/* Top badges */}
+            <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {isAdmin && data?.stats?.pendingRequests > 0 && (
                 <button
                   onClick={() => navigate('/requests')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px', backgroundColor: 'rgba(220,38,38,0.25)', border: '1px solid rgba(220,38,38,0.4)', borderRadius: '10px', color: '#FCA5A5', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(220,38,38,0.35)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(220,38,38,0.25)'; }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '7px 13px', backgroundColor: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.35)', borderRadius: '10px', color: '#FCA5A5', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(220,38,38,0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(220,38,38,0.2)'; }}
                 >
                   <AlertTriangle size={13} />
-                  {data.stats.pendingRequests} pending {data.stats.pendingRequests === 1 ? 'request' : 'requests'}
+                  {data.stats.pendingRequests} pending
                   <ArrowUpRight size={12} />
                 </button>
               )}
-              <span style={{ padding: '7px 14px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '8px', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.85)', textTransform: 'capitalize', letterSpacing: '0.06em' }}>
+              <span style={{ padding: '6px 13px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.8)', textTransform: 'capitalize', letterSpacing: '0.07em' }}>
                 {user?.role}
               </span>
             </div>
+
+            {/* Icon */}
+            <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}>
+              {getGreetingIcon()}
+            </div>
+
+            {/* Greeting */}
+            <div style={{ fontSize: '28px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: '8px' }}>
+              Good {getTimeOfDay()}, {user?.name?.split(' ')[0]}!
+            </div>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
+              <Clock size={11} color="rgba(255,255,255,0.3)" /> {todayStr()}
+            </div>
+
           </div>
         </div>
 

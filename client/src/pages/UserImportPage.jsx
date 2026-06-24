@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { FileText, Trash2, Upload, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
+import { FileText, Trash2, Upload, CheckCircle, XCircle, AlertCircle, Users, Download } from 'lucide-react';
 import api from '../api/axios.js';
 import TopBar from '../components/layout/TopBar.jsx';
 import Toast from '../components/ui/Toast.jsx';
@@ -68,11 +68,22 @@ export default function UserImportPage() {
     } finally { setImporting(false); }
   };
 
+  const downloadTemplate = () => {
+    const header = 'name,email,username,role';
+    const sample = EXAMPLE_ROWS.map(r => `${r.name},${r.email},${r.username},${r.role}`).join('\n');
+    const blob = new Blob([`${header}\n${sample}`], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'orad_user_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const COLS = ['name', 'email', 'username', 'role'];
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <TopBar title="Bulk User Import" icon={Upload} />
+      <TopBar title="Bulk User Import" icon={Upload} breadcrumb={[{ label: 'Administration' }, { label: 'User Management', to: '/users' }, { label: 'Bulk Import' }]} />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', margin: '24px', borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', backgroundColor: '#FFFFFF' }}>
 
@@ -135,6 +146,9 @@ export default function UserImportPage() {
 
           {/* Save button */}
           <div style={{ padding: '16px 24px', borderTop: '1px solid #E5E7EB' }}>
+            <button onClick={downloadTemplate} style={{ width: '100%', padding: '9px', marginBottom: '8px', backgroundColor: '#F7F8FA', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#306196', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <Download size={13} /> Download CSV Template
+            </button>
             <button
               onClick={handleImport}
               disabled={!file || importing}

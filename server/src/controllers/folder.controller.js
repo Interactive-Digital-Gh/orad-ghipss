@@ -7,22 +7,36 @@ const createFolderSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   icon: z.string().optional(),
+  color: z.string().optional(),
   allowedRoles: z.array(z.enum(['admin', 'member', 'viewer'])).min(1),
   announcement: z.string().optional(),
 });
 
 export const getFolders = asyncHandler(async (req, res) => {
-  const userRole = req.user.role;
+  const { id: userId, role: userRole } = req.user;
+
+  // Admins see all folders; others see only folders they have explicit access to
+  const where = userRole === 'admin'
+    ? {}
+    : { userAccess: { some: { userId, canView: true, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] } } };
+
   const folders = await prisma.folder.findMany({
-    where: {
-      allowedRoles: { has: userRole },
-    },
+    where,
     include: {
       _count: { select: { documents: { where: { deletedAt: null } } } },
     },
     orderBy: { createdAt: 'asc' },
   });
   res.json(folders);
+});
+
+export const getMyFolderAccess = asyncHandler(async (req, res) => {
+  if (req.user.role === 'admin') return res.json({ canView: true, canUpload: true });
+  const access = await prisma.userFolderAccess.findUnique({
+    where: { userId_folderId: { userId: req.user.id, folderId: req.params.folderId } },
+  });
+  if (!access) return res.json({ canView: false, canUpload: false });
+  res.json({ canView: access.canView, canUpload: access.canUpload });
 });
 
 export const getFolder = asyncHandler(async (req, res) => {
@@ -44,6 +58,7 @@ const updateFolderSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   icon: z.string().optional(),
+  color: z.string().optional(),
   allowedRoles: z.array(z.enum(['admin', 'member', 'viewer'])).min(1).optional(),
   announcement: z.string().optional(),
 });

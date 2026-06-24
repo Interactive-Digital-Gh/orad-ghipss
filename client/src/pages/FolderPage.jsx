@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Megaphone, ChevronRight, Trash2, X, MoreHorizontal, Pencil, Folder } from 'lucide-react';
+import { Megaphone, ChevronRight, Trash2, X, MoreHorizontal, Pencil, Folder, Upload } from 'lucide-react';
 import api from '../api/axios.js';
 import { useAuth } from '../hooks/useAuth.js';
 import TopBar from '../components/layout/TopBar.jsx';
 import DocumentTable from '../components/directory/DocumentTable.jsx';
 import Modal from '../components/ui/Modal.jsx';
 import FolderManagementModal from '../components/directory/FolderManagementModal.jsx';
+import AccessRequestModal from '../components/directory/AccessRequestModal.jsx';
 import Toast from '../components/ui/Toast.jsx';
 import PresenceIndicator from '../components/directory/PresenceIndicator.jsx';
 import DragDropUpload from '../components/ui/DragDropUpload.jsx';
@@ -35,16 +36,24 @@ export default function FolderPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [showRequestUpload, setShowRequestUpload] = useState(false);
+  const [folderPerms, setFolderPerms] = useState(null);
   const menuRef = useRef(null);
+
+  const isAdmin = user?.role === 'admin';
+  const canUpload = isAdmin || folderPerms?.canUpload === true;
+  const canRequestUpload = !isAdmin && folderPerms && !folderPerms.canUpload;
 
   const loadDocuments = () => {
     setLoading(true);
     Promise.all([
       api.get(`/folders/${folderId}/documents`),
       api.get(`/folders/${folderId}`).catch(() => ({ data: null })),
-    ]).then(([docsRes, folderRes]) => {
+      !isAdmin ? api.get(`/folders/${folderId}/my-access`).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
+    ]).then(([docsRes, folderRes, accessRes]) => {
       setDocuments(docsRes.data);
       if (folderRes.data) setFolder(folderRes.data);
+      if (accessRes.data) setFolderPerms(accessRes.data);
     }).catch(console.error).finally(() => setLoading(false));
   };
 
@@ -100,10 +109,22 @@ export default function FolderPage() {
       <TopBar
         title={folderName}
         icon={Folder}
+        breadcrumb={[{ label: 'Workspace' }, { label: 'Documents', to: '/directory' }, { label: folderName }]}
         actions={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <PresenceIndicator folderId={folderId} />
-            {user?.role === 'admin' && (
+            {canRequestUpload && (
+              <button
+                onClick={() => setShowRequestUpload(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', backgroundColor: '#FFFFFF', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#374151', cursor: 'pointer', transition: 'all 0.1s' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#F7F8FA'; e.currentTarget.style.borderColor = '#306196'; e.currentTarget.style.color = '#306196'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.color = '#374151'; }}
+              >
+                <Upload size={13} />
+                Request upload access
+              </button>
+            )}
+            {isAdmin && (
               <div ref={menuRef} style={{ position: 'relative' }}>
                 <button
                   onClick={() => setMenuOpen(o => !o)}
@@ -169,6 +190,7 @@ export default function FolderPage() {
           <DocumentTable
             documents={documents}
             userRole={user?.role}
+            canUpload={canUpload}
             onDelete={handleDelete}
             onToast={setToast}
             onRefresh={loadDocuments}
@@ -197,6 +219,15 @@ export default function FolderPage() {
           >
             <DragDropUpload multiple={false} onFilesSelected={(files) => setUploadFile(files[0])} />
           </Modal>
+        )}
+
+        {showRequestUpload && folder && (
+          <AccessRequestModal
+            folder={folder}
+            defaultType="upload"
+            onClose={() => setShowRequestUpload(false)}
+            onSubmitted={() => { setShowRequestUpload(false); setToast({ message: 'Upload access request submitted', type: 'success' }); }}
+          />
         )}
 
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

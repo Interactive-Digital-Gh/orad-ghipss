@@ -15,6 +15,12 @@ const ROLES = [
   { id: 'viewer', label: 'Viewer', description: 'Read-only access to permitted folders',       color: '#D97706', bg: '#FEF3C7', border: '#FDE68A', selBg: '#FFFBEB' },
 ];
 
+const FOLDER_COLORS = [
+  '#306196', '#1D4ED8', '#7C3AED', '#059669', '#D97706',
+  '#DC2626', '#DB2777', '#0891B2', '#65A30D', '#EA580C',
+  '#6B7280', '#112235',
+];
+
 const ICON_OPTIONS = [
   { key: 'Folder',        Icon: Folder        },
   { key: 'FileText',      Icon: FileText      },
@@ -49,6 +55,7 @@ export default function FolderManagementModal({ folder, onClose, onSaved }) {
     description: folder?.description || '',
     allowedRoles: folder?.allowedRoles || ['admin'],
     icon: folder?.icon || 'Folder',
+    color: folder?.color || '#306196',
     announcement: folder?.announcement || '',
   });
   const [loading, setLoading] = useState(false);
@@ -105,7 +112,7 @@ export default function FolderManagementModal({ folder, onClose, onSaved }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {/* Live preview icon */}
-            <div style={{ width: '52px', height: '52px', borderRadius: '14px', backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.2s' }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '14px', backgroundColor: form.color, border: '2px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }}>
               <SelectedIcon size={24} color="#FFFFFF" />
             </div>
             <div>
@@ -167,6 +174,21 @@ export default function FolderManagementModal({ folder, onClose, onSaved }) {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Color picker */}
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Folder Color</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', backgroundColor: '#F7F8FA', borderRadius: '10px', border: '1px solid #E5E7EB' }}>
+                {FOLDER_COLORS.map(c => (
+                  <button key={c} type="button" onClick={() => setForm(f => ({ ...f, color: c }))}
+                    title={c}
+                    style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: c, border: form.color === c ? `3px solid #112235` : '3px solid transparent', cursor: 'pointer', boxSizing: 'border-box', outline: form.color === c ? `2px solid ${c}` : 'none', outlineOffset: '2px', transition: 'transform 0.1s, outline 0.1s' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.15)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  />
+                ))}
               </div>
             </div>
 
