@@ -64,7 +64,7 @@ export const login = asyncHandler(async (req, res) => {
   });
 
   const { password: _, ...userWithoutPassword } = user;
-  res.json({ user: userWithoutPassword });
+  res.json({ user: userWithoutPassword, token });
 });
 
 export const me = asyncHandler(async (req, res) => {
