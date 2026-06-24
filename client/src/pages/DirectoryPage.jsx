@@ -22,13 +22,6 @@ function getFolderIcon(folder) {
   const color = folder.color || '#306196';
   return { Icon, color };
 }
-const KNOWN_LOCKED = [
-  { id: 'f-sop',      name: 'Standard Operating Procedures', allowedRoles: ['admin','member','viewer'] },
-  { id: 'f-manuals',  name: 'Product Manuals',               allowedRoles: ['admin','member'] },
-  { id: 'f-partner',  name: 'Partner Documents',             allowedRoles: ['admin','member'] },
-  { id: 'f-onboard',  name: 'Onboarding Materials',          allowedRoles: ['admin','member','viewer'] },
-  { id: 'f-internal', name: 'Internal Admin Files',          allowedRoles: ['admin'] },
-];
 
 /* ─── File type chip ─── */
 const FILE_TYPE = {
@@ -95,17 +88,12 @@ export default function DirectoryPage() {
 
   useEffect(() => { loadFolders(); }, [loadFolders]);
 
-  const accessibleIds = new Set(folders.map(f => f.id));
-  const lockedFolders = KNOWN_LOCKED.filter(f => !accessibleIds.has(f.id));
-  const allFolders = [
-    ...folders.map(f => ({ ...f, locked: false })),
-    ...lockedFolders.map(f => ({ ...f, locked: true })),
-  ];
+  const allFolders = folders.map(f => ({ ...f, locked: false }));
 
   const tableFolders = tableFilter === 'accessible'
-    ? allFolders.filter(f => !f.locked)
+    ? allFolders
     : tableFilter === 'restricted'
-    ? allFolders.filter(f => f.locked)
+    ? []
     : allFolders;
 
   const filteredDocs = docSearch
