@@ -39,7 +39,8 @@ export const createGuestLink = asyncHandler(async (req, res) => {
     userAgent: req.headers['user-agent'],
   });
 
-  res.status(201).json({ ...link, url: `${process.env.CLIENT_URL}/guest/${link.token}` });
+  const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+  res.status(201).json({ ...link, url: `${baseUrl}/guest/${link.token}` });
 });
 
 export const getDocumentGuestLinks = asyncHandler(async (req, res) => {
@@ -48,7 +49,8 @@ export const getDocumentGuestLinks = asyncHandler(async (req, res) => {
     include: { creator: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   });
-  res.json(links.map(l => ({ ...l, url: `${process.env.CLIENT_URL}/guest/${l.token}` })));
+  const baseUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+  res.json(links.map(l => ({ ...l, url: `${baseUrl}/guest/${l.token}` })));
 });
 
 export const deleteGuestLink = asyncHandler(async (req, res) => {
