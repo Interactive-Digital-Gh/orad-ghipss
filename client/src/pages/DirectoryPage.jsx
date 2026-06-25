@@ -287,7 +287,7 @@ export default function DirectoryPage() {
             </div>
           ) : (() => {
             const accessibleFolders = allFolders.filter(f => !f.locked);
-            const visibleFolders = showAllFolders ? accessibleFolders : accessibleFolders.slice(0, FOLDERS_VISIBLE);
+            const visibleFolders = showAllFolders ? allFolders : allFolders.slice(0, FOLDERS_VISIBLE);
             const hiddenCount = allFolders.length - FOLDERS_VISIBLE;
             return (
               <>
@@ -301,13 +301,13 @@ export default function DirectoryPage() {
                     </div>
                   ))}
                   {/* Admin: + New Folder card */}
-                  {isAdmin && (showAllFolders || accessibleFolders.length < FOLDERS_VISIBLE) && (
+                  {isAdmin && (showAllFolders || allFolders.length < FOLDERS_VISIBLE) && (
                     <NewFolderCard onClick={() => setShowCreate(true)} />
                   )}
                 </div>
 
                 {/* Show more / collapse toggle */}
-                {accessibleFolders.length > FOLDERS_VISIBLE && (
+                {allFolders.length > FOLDERS_VISIBLE && (
                   <button
                     onClick={() => setShowAllFolders(v => !v)}
                     style={{
@@ -321,7 +321,7 @@ export default function DirectoryPage() {
                   >
                     {showAllFolders
                       ? 'Show less'
-                      : `+ ${accessibleFolders.length - FOLDERS_VISIBLE} more folder${accessibleFolders.length - FOLDERS_VISIBLE === 1 ? '' : 's'}`}
+                      : `+ ${allFolders.length - FOLDERS_VISIBLE} more folder${allFolders.length - FOLDERS_VISIBLE === 1 ? '' : 's'}`}
                   </button>
                 )}
               </>
