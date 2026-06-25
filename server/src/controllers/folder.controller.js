@@ -23,18 +23,19 @@ export const getFolders = asyncHandler(async (req, res) => {
     return res.json(folders.map(f => ({ ...f, hasAccess: true, canUpload: true })));
   }
 
-  const folders = await prisma.folder.findMany({
-    include: {
-      _count: { select: { documents: { where: { deletedAt: null } } } },
-      userAccess: { where: { userId } },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+  const [folders, userAccesses] = await Promise.all([
+    prisma.folder.findMany({
+      include: { _count: { select: { documents: { where: { deletedAt: null } } } } },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.userFolderAccess.findMany({ where: { userId } }),
+  ]);
+
+  const accessMap = new Map(userAccesses.map(a => [a.folderId, a]));
 
   const result = folders.map(f => {
-    const access = f.userAccess?.[0];
-    const hasAccess = !!access?.canView;
-    return { ...f, userAccess: undefined, hasAccess, canUpload: !!access?.canUpload };
+    const access = accessMap.get(f.id);
+    return { ...f, hasAccess: !!access?.canView, canUpload: !!access?.canUpload };
   });
 
   res.json(result);
