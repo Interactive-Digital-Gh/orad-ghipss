@@ -76,8 +76,8 @@ export default function DirectoryPage() {
       .then(async (res) => {
         const accessible = res.data;
         setFolders(accessible);
-        // Fetch recent documents from accessible folders (up to first 3 to keep requests low)
-        const slice = accessible.slice(0, 4);
+        // Fetch recent documents from accessible folders only
+        const slice = accessible.filter(f => f.hasAccess !== false).slice(0, 4);
         try {
           const allDocs = await Promise.all(slice.map(f => api.get(`/folders/${f.id}/documents`).then(r => r.data)));
           const merged = allDocs.flat().sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)).slice(0, 8);
@@ -90,12 +90,12 @@ export default function DirectoryPage() {
 
   useEffect(() => { loadFolders(); }, [loadFolders]);
 
-  const allFolders = folders.map(f => ({ ...f, locked: false }));
+  const allFolders = folders.map(f => ({ ...f, locked: !f.hasAccess }));
 
   const tableFolders = tableFilter === 'accessible'
-    ? allFolders
+    ? allFolders.filter(f => !f.locked)
     : tableFilter === 'restricted'
-    ? []
+    ? allFolders.filter(f => f.locked)
     : allFolders;
 
   const filteredDocs = docSearch
@@ -286,7 +286,8 @@ export default function DirectoryPage() {
               <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
             </div>
           ) : (() => {
-            const visibleFolders = showAllFolders ? allFolders : allFolders.slice(0, FOLDERS_VISIBLE);
+            const accessibleFolders = allFolders.filter(f => !f.locked);
+            const visibleFolders = showAllFolders ? accessibleFolders : accessibleFolders.slice(0, FOLDERS_VISIBLE);
             const hiddenCount = allFolders.length - FOLDERS_VISIBLE;
             return (
               <>
@@ -300,13 +301,13 @@ export default function DirectoryPage() {
                     </div>
                   ))}
                   {/* Admin: + New Folder card */}
-                  {isAdmin && (showAllFolders || allFolders.length < FOLDERS_VISIBLE) && (
+                  {isAdmin && (showAllFolders || accessibleFolders.length < FOLDERS_VISIBLE) && (
                     <NewFolderCard onClick={() => setShowCreate(true)} />
                   )}
                 </div>
 
                 {/* Show more / collapse toggle */}
-                {allFolders.length > FOLDERS_VISIBLE && (
+                {accessibleFolders.length > FOLDERS_VISIBLE && (
                   <button
                     onClick={() => setShowAllFolders(v => !v)}
                     style={{
@@ -320,7 +321,7 @@ export default function DirectoryPage() {
                   >
                     {showAllFolders
                       ? 'Show less'
-                      : `+ ${hiddenCount} more folder${hiddenCount === 1 ? '' : 's'}`}
+                      : `+ ${accessibleFolders.length - FOLDERS_VISIBLE} more folder${accessibleFolders.length - FOLDERS_VISIBLE === 1 ? '' : 's'}`}
                   </button>
                 )}
               </>

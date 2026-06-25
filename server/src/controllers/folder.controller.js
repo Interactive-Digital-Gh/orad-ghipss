@@ -15,19 +15,22 @@ const createFolderSchema = z.object({
 export const getFolders = asyncHandler(async (req, res) => {
   const { id: userId, role: userRole } = req.user;
 
-  // Admins see all folders; others see only folders they have explicit access to
-  const where = userRole === 'admin'
-    ? {}
-    : { userAccess: { some: { userId, canView: true, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] } } };
-
   const folders = await prisma.folder.findMany({
-    where,
     include: {
       _count: { select: { documents: { where: { deletedAt: null } } } },
+      userAccess: userRole !== 'admin' ? { where: { userId } } : false,
     },
     orderBy: { createdAt: 'asc' },
   });
-  res.json(folders);
+
+  const result = folders.map(f => {
+    if (userRole === 'admin') return { ...f, hasAccess: true, canUpload: true };
+    const access = f.userAccess?.[0];
+    const hasAccess = !!access?.canView;
+    return { ...f, userAccess: undefined, hasAccess, canUpload: !!access?.canUpload };
+  });
+
+  res.json(result);
 });
 
 export const getMyFolderAccess = asyncHandler(async (req, res) => {
