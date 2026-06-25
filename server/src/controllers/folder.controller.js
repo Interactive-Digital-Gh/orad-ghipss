@@ -15,16 +15,23 @@ const createFolderSchema = z.object({
 export const getFolders = asyncHandler(async (req, res) => {
   const { id: userId, role: userRole } = req.user;
 
+  if (userRole === 'admin') {
+    const folders = await prisma.folder.findMany({
+      include: { _count: { select: { documents: { where: { deletedAt: null } } } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return res.json(folders.map(f => ({ ...f, hasAccess: true, canUpload: true })));
+  }
+
   const folders = await prisma.folder.findMany({
     include: {
       _count: { select: { documents: { where: { deletedAt: null } } } },
-      userAccess: userRole !== 'admin' ? { where: { userId } } : false,
+      userAccess: { where: { userId } },
     },
     orderBy: { createdAt: 'asc' },
   });
 
   const result = folders.map(f => {
-    if (userRole === 'admin') return { ...f, hasAccess: true, canUpload: true };
     const access = f.userAccess?.[0];
     const hasAccess = !!access?.canView;
     return { ...f, userAccess: undefined, hasAccess, canUpload: !!access?.canUpload };
