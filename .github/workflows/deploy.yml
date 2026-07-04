@@ -1,4 +1,4 @@
-name: Deploy to ID server (staging)
+name: Deploy to ID server (staging)!
 
 # Redeploys ORAD to the ID server whenever master is updated.
 #
