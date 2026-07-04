@@ -57,7 +57,19 @@ jobs:
 
             echo "==> Restarting service"
             systemctl restart orad
-            sleep 3
             systemctl is-active orad
-            curl -fsS -o /dev/null -w 'local health check: %{http_code}\n' http://127.0.0.1:5002/
+
+            echo "==> Waiting for the app to listen on :5002 (migrate + boot takes a few seconds)"
+            for i in $(seq 1 30); do
+              if curl -fsS -o /dev/null http://127.0.0.1:5002/; then
+                echo "local health check: OK after ${i}s"
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "ERROR: app did not become healthy within 30s"
+                journalctl -u orad -n 40 --no-pager || true
+                exit 1
+              fi
+              sleep 1
+            done
             echo "==> Deploy complete"
