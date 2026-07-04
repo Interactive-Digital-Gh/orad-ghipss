@@ -1,6 +1,6 @@
 name: Deploy to ID server (staging)
 
-# Redeploys ORAD to the ID server whenever main is updated.
+# Redeploys ORAD to the ID server whenever master is updated.
 #
 # Requires these GitHub Actions secrets (Settings > Secrets and variables > Actions):
 #   SSH_HOST  - the ID server hostname / public IP
@@ -10,12 +10,12 @@ name: Deploy to ID server (staging)
 #
 # The server clone at /var/www/staging/orad-ghipss must have `origin` pointing at
 # this repo (Interactive-Digital-Gh/orad-ghipss). The workflow hard-resets the
-# clone to origin/main, so do NOT keep uncommitted local edits on the server.
+# clone to origin/master, so do NOT keep uncommitted local edits on the server.
 # Seeding is intentionally NOT run here (the seed resets the admin password).
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -40,9 +40,9 @@ jobs:
             export PATH=/root/.nvm/versions/node/v22.22.3/bin:$PATH
             cd /var/www/staging/orad-ghipss
 
-            echo "==> Syncing code to origin/main"
+            echo "==> Syncing code to origin/master"
             git fetch --all --prune
-            git reset --hard origin/main
+            git reset --hard origin/master
 
             echo "==> Backend: install deps, generate client, apply migrations"
             cd server
