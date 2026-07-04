@@ -14,5 +14,6 @@ export const uploadFile = async ({ key, buffer }) => {
 };
 
 export const getPresignedUrl = async (key) => {
-  return `http://localhost:4000/files/${encodeURIComponent(key).replace(/%2F/g, '/')}`;
+  // Relative, same-origin URL so it works behind any host/proxy (prod nginx, dev Vite proxy)
+  return `/files/${encodeURIComponent(key).replace(/%2F/g, '/')}`;
 };
