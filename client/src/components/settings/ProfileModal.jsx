@@ -162,7 +162,7 @@ function SupportSection() {
       <Divider />
       <SecRow
         label="Support access"
-        desc="Grant MojoPay ops team temporary access to troubleshoot your account. You can revoke access anytime."
+        desc="Grant the ORAD support team temporary access to troubleshoot your account. You can revoke access anytime."
         action={<Toggle value={on} onChange={setOn} />}
         last
       />

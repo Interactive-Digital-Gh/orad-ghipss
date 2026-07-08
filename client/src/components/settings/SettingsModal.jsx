@@ -59,8 +59,8 @@ const LEFT_NAV = [
 function SectionGeneral() {
   const [editing, setEditing] = useState({});
   const [vals, setVals] = useState({
-    name: 'MojoPay Operations Portal',
-    url: 'ops.mojopay.com',
+    name: 'ORAD — GhIPSS Operations Portal',
+    url: 'orad.interactivedigital.com.gh',
     tz: 'Africa/Accra (GMT+0)',
     lang: 'English',
   });

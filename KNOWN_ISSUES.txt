@@ -1,0 +1,32 @@
+ORAD — KNOWN ISSUES
+Updated 2026-07-05. From a static code audit. (MojoPay branding: already fixed.)
+
+BROKEN
+[1] Profile edit doesn't save (HIGH). Client does PATCH /auth/profile
+    (ProfileModal.jsx:87, ProfilePage.jsx:89,128) but the route doesn't exist
+    (auth.routes.js has only GET /profile). Fix: add PATCH /profile handler+route.
+
+[2] Admin Settings page is a mockup (MED-HIGH). SettingsModal.jsx makes no API
+    calls — portal name, default role, self-registration, session timeout,
+    retention, auto-export, API access all reset on close and persist nothing.
+    (No self-registration endpoint exists either.) Fix: hide fake sections, or
+    build real settings endpoints.
+
+NEEDS CONFIG (inactive now)
+[3] Email disabled (MED). No SMTP_* set, so email.service.js skips all sends:
+    account-creation, access-request decisions, comment notifications. In-app
+    notifications still work. Fix: set SMTP_HOST/PORT/USER/PASS in server/.env.
+
+[4] "S3" is local disk (LOW-MED). s3.service.js writes to server/uploads/, not
+    S3. So: back up that dir; @aws-sdk is unused; watermark applies to PDFs only.
+    Fix: keep local disk (document + back up) or implement real S3/MinIO.
+
+[5] No Redis (LOW). rateLimiter.js falls back to in-memory; login limits reset on
+    restart, won't span instances. Fix: install Redis, set REDIS_URL.
+
+MINOR
+[6] JS bundle ~1 MB (Vite warns). Slow first load; consider code-splitting.
+[7] Seed users have hardcoded passwords (seed.js: sarah/Member2024!,
+    kofi/Viewer2024!). Rotate these + admin password before go-live.
+
+ORDER: [1] -> [2] -> [3] -> [7] -> [4][5][6].
